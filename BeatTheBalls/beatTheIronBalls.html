@@ -1,0 +1,351 @@
+<html>
+
+<head>
+    <script src="phaser.min.js"></script>
+</head>
+
+<body>
+    <script type="text/javascript">
+        window.onload = function() {
+            var game = new Phaser.Game(1200, 512, Phaser.AUTO, '', {
+                preload: preload,
+                create: create,
+                update: update,
+            });
+
+            var ecran, titre, texte, gameOver, tryAgain, youWin;
+            var player, cursors, enemy, bulletEnemy, bulletPlayer, bulletTime, boss, boomSound, shootSound, state;
+
+            function preload() {
+
+                game.load.image('bg', 'sprites/ecranAcceuil.png');
+                //game.load.tilemap('bkgd', 'sprites/Bg.json', null, Phaser.Tilemap.TILED_JSON);
+                //game.load.image('tilesSheet', 'sprites/Bkgd1600.png');
+                game.load.tilemap('bkgd', 'sprites/Bg800.json', null, Phaser.Tilemap.TILED_JSON);
+                game.load.image('tilesSheet', 'sprites/Bkgd800.png');
+                game.load.image('etoile', 'sprites/star2.png');
+                game.load.image('vaisseau', 'sprites/joueur.png');
+                game.load.image('enemy', 'sprites/enemy.png');
+                game.load.image('bulletEnemy', 'sprites/enemyBullet.png');
+                game.load.image('bulletPlayer', 'sprites/bulletPlayer.png');
+                game.load.spritesheet('boom', 'sprites/explosion.png', 128, 128, 17);
+                game.load.image('boss', 'sprites/boss.png');
+                game.load.image('bulletBoss', 'sprites/bossBullet.png');
+                game.load.audio('boomSound', 'sounds/explosion.wav');
+                game.load.audio('shootSound', 'sounds/shoot.wav');
+            }
+
+            function create() {
+                game.add.sprite(0, 0, 'bg');
+                state = 0;
+                ecran = {
+                    font: "bold 32px Arial",
+                    fill: "#fff",
+                    boundsAlignH: "center",
+                    boundsAlignV: "middle"
+                };
+                play = {
+                    font: "bold 24px Arial",
+                    fill: "#fff",
+                    boundsAlignH: "center",
+                    boundsAlignV: "middle"
+                };
+                titre = game.add.text(340, 140, "Beat The Iron Balls", ecran);
+                texte = game.add.text(340, 200, "Play", play);
+                texte.inputEnabled = true;
+
+                texte.events.onInputOver.add(over, this);
+                texte.events.onInputDown.add(down, this);
+            }
+
+            function update() {
+                switch (state) {
+
+                    case 1:
+                        if (game.camera.x > 7100) {
+                            game.physics.arcade.enable(boss);
+                            boss.enableBody = true;
+                            boss.body.immovable = true;
+                            boss.body.moves = false;
+                        }
+                        game.camera.x++;
+                        if (cursors.left.isDown) {
+                            player.body.velocity.x = -90;
+                            player.body.velocity.y = 0;
+                        } else if (cursors.right.isDown) {
+                            player.body.velocity.x = 120;
+                            player.body.velocity.y = 0;
+                        }
+                        if (cursors.up.isDown) {
+                            player.body.velocity.y = -90;
+                            player.body.velocity.x = 0;
+                        } else if (cursors.down.isDown) {
+                            player.body.velocity.y = 90;
+                            player.body.velocity.x = 0;
+                        }
+                        if (spaceKey.isDown) {
+                            playerShoot();
+                            playerShoot2();
+                        }
+
+                        if (player.x < game.camera.x) player.x = game.camera.x;
+                        if (player.x > game.camera.x + 800) player.x = game.camera.x + 800;
+                        if (player.y < game.camera.y) player.y = 0;
+                        if (player.y > game.camera.y + 800) player.y = game.camera.y + 800;
+
+                        game.physics.arcade.collide(player, bulletsEnemy, collisionPlayerBullet, null, this);
+                        //game.physics.arcade.collide(player, layer, collisionLayerPlayer, null, this);
+                        game.physics.arcade.collide(bulletPlayer, enemies, collisionBulletEnemies, null, this);
+                        game.physics.arcade.collide(player, enemies, collisionEnemyPlayer, null, this);
+                        game.physics.arcade.collide(bulletPlayer, boss, collisionBulletBoss, null, this);
+
+                        break;
+
+                    case 2:
+                        lose();
+                        break;
+
+                    case 3:
+                        win();
+                        break;
+                }
+            }
+
+            function createGame() {
+                game.world.removeAll();
+                game.scale.pageAlignHorizontally = true;
+                for (var i = 0; i < 500; i++) {
+                    game.add.sprite(Math.round(Math.random() * 8000), Math.round(Math.random() * 512), 'etoile');
+                }
+                map = game.add.tilemap('bkgd');
+                map.addTilesetImage('Bg800', 'tilesSheet');
+                layer = map.createLayer('Calque de Tile 1');
+                map.setCollisionBetween(0, 10000);
+
+                game.world.setBounds(0, 0, 8000, 512);
+
+                bulletTime = game.time.now;
+
+                player = game.add.sprite(100, 200, 'vaisseau');
+                game.physics.arcade.enable(player);
+                player.life = 3;
+
+                enemy = game.add.sprite(400, 400, 'enemy');
+
+                boss = game.add.sprite(7750, 80, 'boss');
+                boss.life = 30;
+
+                //création des groupes
+
+                bulletsEnemy = game.add.group();
+                bulletsEnemy.enableBody = true;
+                bulletsEnemy.physicsBodyType = Phaser.Physics.ARCADE;
+                bulletsEnemy.createMultiple(30, 'bulletEnemy');
+                bulletsEnemy.setAll('outOfBoundsKill', true);
+                bulletsEnemy.setAll('checkWorldBounds', true);
+
+                bulletsPlayer = game.add.group();
+                bulletsPlayer.enableBody = true;
+                bulletsPlayer.physicsBodyType = Phaser.Physics.ARCADE;
+                bulletsPlayer.createMultiple(190, 'bulletPlayer');
+                bulletsPlayer.setAll('outOfBoundsKill', true);
+                bulletsPlayer.setAll('checkWorldBounds', true);
+
+                enemies = game.add.group();
+                enemies.enableBody = true;
+                enemies.physicsBodyType = Phaser.Physics.ARCADE;
+                enemies.createMultiple(5, 'enemy');
+                enemies.setAll('outOfBoundsKill', true);
+                enemies.setAll('checkWorldBounds', true);
+
+                game.time.events.repeat(Phaser.Timer.SECOND * 2, 60, shoot, this);
+                game.time.events.repeat(Phaser.Timer.SECOND * 2, 160, bossShoot, this);
+                game.time.events.repeat(Phaser.Timer.SECOND * 5, 30, spawnEnemies, this);
+
+                cursors = game.input.keyboard.createCursorKeys();
+                spaceKey = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+
+                boomSound = game.add.audio('boomSound');
+                shootSound = game.add.audio('shootSound');
+            }
+
+            function shoot() {
+                bulletEnemy = bulletsEnemy.getFirstExists(false);
+                if (bulletEnemy) {
+                    bulletEnemy.reset(enemy.x, enemy.y);
+                    var distance = Math.sqrt((player.x - enemy.x) * (player.x - enemy.x) + (player.y - enemy.y) * (player.y - enemy.y));
+                    bulletEnemy.body.velocity.x = (player.x - enemy.x) * 100 / distance;
+                    bulletEnemy.body.velocity.y = (player.y - enemy.y) * 100 / distance;
+                }
+            }
+
+            function playerShoot() {
+                if (game.time.now > bulletTime + 200) {
+                    bulletPlayer = bulletsPlayer.getFirstExists(false);
+                    if (bulletPlayer) {
+                        bulletPlayer.reset(player.x + 58, player.y + 12);
+                        bulletPlayer.body.velocity.x = 300;
+                        bulletTime = game.time.now;
+                    }
+                }
+                shootSound.play();
+            }
+
+            function playerShoot2() {
+                if (game.time.now > bulletTime + 200) {
+                    bulletPlayer = bulletsPlayer.getFirstExists(false);
+                    if (bulletPlayer) {
+                        bulletPlayer.reset(player.x + 58, player.y + 32);
+                        bulletPlayer.body.velocity.x = 300;
+                        bulletTime = game.time.now;
+                    }
+                }
+                shootSound.play();
+            }
+
+            function bossShoot() {
+                bulletEnemy = bulletsEnemy.getFirstExists(false);
+                if (bulletEnemy) {
+                    bulletEnemy.reset(boss.x, boss.y);
+                    var distance = Math.sqrt((player.x - boss.x) * (player.x - boss.x) + (player.y - boss.y) * (player.y - boss.y));
+                    bulletEnemy.body.velocity.x = (player.x - boss.x) * 100 / distance;
+                    bulletEnemy.body.velocity.y = (player.y - boss.y) * 100 / distance;
+                }
+            }
+
+            function spawnEnemies() {
+                enemy = enemies.getFirstExists(false);
+                if (enemy) {
+                    enemy.reset(game.camera.x + 1200, game.rnd.between(10, 512));
+                    var distance = Math.sqrt((player.x - enemy.x) * (player.x - enemy.x) + (player.y - enemy.y) * (player.y - enemy.y));
+                    enemy.body.velocity.x = (player.x - enemy.x) * 100 / distance;
+                    enemy.body.velocity.y = (player.y - enemy.y) * 100 / distance;
+                }
+            }
+
+            function blinkPlayer() {
+                player.alpha = 1 - player.alpha;
+            }
+
+
+            function collisionPlayerBullet(_player, _bulletEnemy) {
+                explosion = game.add.sprite(_player.x - 32, _player.y - 32, 'boom');
+                explosion.animations.add('explode');
+                explosion.animations.play('explode', 60, false, true);
+                _player.life--;
+                if (_player.life == 0) {
+                    _player.kill();
+                    lose();
+                } else {
+                    game.time.events.repeat(Phaser.Timer.SECOND * 0.2, 10, blinkPlayer, bossShoot, this);
+                }
+                _bulletEnemy.kill();
+                boomSound.play();
+            }
+
+            function collisionBulletEnemies(_bulletPlayer, _enemy) {
+                explosion = game.add.sprite(_enemy.x - 32, _enemy.y - 14, 'boom');
+                explosion.animations.add('explode');
+                explosion.animations.play('explode', 30, false);
+                _enemy.kill();
+                _bulletPlayer.kill();
+                boomSound.play();
+            }
+
+            function collisionLayerPlayer(_player, _layer) {
+                explosion = game.add.sprite(_player.x - 40, _player.y - 40, 'boom');
+                explosion.animations.add('explode');
+                explosion.animations.play('explode', 30, false);
+                _player.kill();
+                lose();
+                boomSound.play();
+            }
+
+            function collisionEnemyPlayer(_player, _enemy) {
+                explosion = game.add.sprite(_player.x - 40, _player.y - 40, 'boom');
+                explosion.animations.add('explode');
+                explosion.animations.play('explode', 30, false);
+                _player.kill();
+                lose();
+                _enemy.kill();
+                boomSound.play();
+            }
+
+            function collisionBulletBoss(_boss, _bulletPlayer) {
+                explosion = game.add.sprite(_boss.x, _boss.y + 38, 'boom');
+                explosion.animations.add('explode');
+                explosion.animations.play('explode', 30, false);
+                _boss.life--;
+                if (_boss.life == 0) {
+                    _boss.kill();
+                    win();
+                }
+                _bulletPlayer.kill();
+                boomSound.play();
+            }
+
+            function over(texte) {
+                texte.fill = "#00E6ff";
+            }
+
+            function out(texte) {
+                texte.fill = "#0ac6ff";
+            }
+
+            function down() {
+                createGame();
+                state = 1;
+            }
+
+            function lose() {
+                gameOver = {
+                    font: "bold 32px Arial",
+                    fill: "#fff",
+                    boundsAlignH: "center",
+                    boundsAlignV: "middle"
+                };
+                tryAgain = {
+                    font: "bold 24px Arial",
+                    fill: "#fff",
+                    boundsAlignH: "center",
+                    boundsAlignV: "middle"
+                };
+
+                //titre = game.add.text(340, 140, "Game over", gameOver);
+                titre = game.add.text(game.camera.y, game.camera.x, "Game over", gameOver);
+                texte = game.add.text(340, 200, "Try again", tryAgain);
+                texte.inputEnabled = true;
+                texte.events.onInputOver.add(over, this);
+                texte.events.onInputDown.add(down, this);
+                state = 2;
+            }
+
+            function win() {
+                youWin = {
+                    font: "bold 32px Arial",
+                    fill: "#fff",
+                    boundsAlignH: "center",
+                    boundsAlignV: "middle"
+                };
+                tryAgain = {
+                    font: "bold 24px Arial",
+                    fill: "#fff",
+                    boundsAlignH: "center",
+                    boundsAlignV: "middle"
+                };
+
+                //titre = game.add.text(340, 140, "You win! ", youWin);
+                titre = game.add.text(game.camera.y, game.camera.x, "You win! ", youWin);
+                texte = game.add.text(340, 200, "Play again ", tryAgain);
+                texte.inputEnabled = true;
+                texte.events.onInputOver.add(over, this);
+                texte.events.onInputDown.add(down, this);
+                state = 3;
+            }
+
+        };
+
+    </script>
+</body>
+
+</html>
