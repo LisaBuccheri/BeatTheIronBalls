@@ -265,8 +265,13 @@
                 explosion = game.add.sprite(_player.x - 40, _player.y - 40, 'boom');
                 explosion.animations.add('explode');
                 explosion.animations.play('explode', 30, false);
-                _player.kill();
-                lose();
+                _player.life--;
+                if (_player.life == 0) {
+                    _player.kill();
+                    lose();
+                } else {
+                    game.time.events.repeat(Phaser.Timer.SECOND * 0.2, 10, blinkPlayer, bossShoot, this);
+                }
                 _enemy.kill();
                 boomSound.play();
             }
@@ -298,21 +303,17 @@
             }
 
             function lose() {
-                if (player.kill = true) {
-                    again = {
-                        font: "bold 24px Arial",
-                        fill: "#fff",
-                        boundsAlignH: "center",
-                        boundsAlignV: "middle"
-                    };
+                again = {
+                    font: "bold 24px Arial",
+                    fill: "#fff",
+                    boundsAlignH: "center",
+                    boundsAlignV: "middle"
+                };
 
-                    tryAgain = game.add.text(340, 200, "Try again", again);
-                    tryAgain.inputEnabled = true;
-                    tryAgain.events.onInputOver.add(over, this);
-                    tryAgain.events.onInputDown.add(down, this);
-
-                }
-                state = 2;
+                tryAgain = game.add.text(340, 200, "Try again", again);
+                tryAgain.inputEnabled = true;
+                tryAgain.events.onInputOver.add(over, this);
+                tryAgain.events.onInputDown.add(down, this);
             }
 
             function win() {
@@ -335,7 +336,6 @@
                 texte.inputEnabled = true;
                 texte.events.onInputOver.add(over, this);
                 texte.events.onInputDown.add(down, this);
-                state = 3;
             }
 
         };
