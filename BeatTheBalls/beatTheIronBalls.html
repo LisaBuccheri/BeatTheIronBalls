@@ -95,9 +95,9 @@
 
                         game.physics.arcade.collide(player, bulletsEnemy, collisionPlayerBullet, null, this);
                         //game.physics.arcade.collide(player, layer, collisionLayerPlayer, null, this);
-                        game.physics.arcade.collide(bulletPlayer, enemies, collisionBulletEnemies, null, this);
+                        game.physics.arcade.collide(bulletsPlayer, enemies, collisionBulletEnemies, null, this);
                         game.physics.arcade.collide(player, enemies, collisionEnemyPlayer, null, this);
-                        game.physics.arcade.collide(bulletPlayer, boss, collisionBulletBoss, null, this);
+                        game.physics.arcade.collide(bulletsPlayer, boss, collisionBulletBoss, null, this);
 
                         break;
 
@@ -298,25 +298,20 @@
             }
 
             function lose() {
-                gameOver = {
-                    font: "bold 32px Arial",
-                    fill: "#fff",
-                    boundsAlignH: "center",
-                    boundsAlignV: "middle"
-                };
-                tryAgain = {
-                    font: "bold 24px Arial",
-                    fill: "#fff",
-                    boundsAlignH: "center",
-                    boundsAlignV: "middle"
-                };
+                if (player.kill = true) {
+                    again = {
+                        font: "bold 24px Arial",
+                        fill: "#fff",
+                        boundsAlignH: "center",
+                        boundsAlignV: "middle"
+                    };
 
-                //titre = game.add.text(340, 140, "Game over", gameOver);
-                titre = game.add.text(game.camera.y, game.camera.x, "Game over", gameOver);
-                texte = game.add.text(340, 200, "Try again", tryAgain);
-                texte.inputEnabled = true;
-                texte.events.onInputOver.add(over, this);
-                texte.events.onInputDown.add(down, this);
+                    tryAgain = game.add.text(340, 200, "Try again", again);
+                    tryAgain.inputEnabled = true;
+                    tryAgain.events.onInputOver.add(over, this);
+                    tryAgain.events.onInputDown.add(down, this);
+
+                }
                 state = 2;
             }
 
