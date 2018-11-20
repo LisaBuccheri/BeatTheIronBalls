@@ -138,7 +138,8 @@
                 enemy = game.add.sprite(400, 400, 'enemy');
 
                 boss = game.add.sprite(7750, 80, 'boss');
-                boss.life = 30;
+                game.physics.arcade.enable(boss);
+                boss.life = 15;
 
                 //création des groupes
 
@@ -274,7 +275,8 @@
                 if (_player.life == 0) {
                     _player.kill();
                     lose();
-                } else {
+                } 
+                else {
                     game.time.events.repeat(Phaser.Timer.SECOND * 0.2, 10, blinkPlayer, bossShoot, this);
                 }
                 _enemy.kill();
