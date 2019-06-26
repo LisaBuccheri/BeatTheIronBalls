@@ -131,8 +131,9 @@
                 player.life = 3;
 
                 enemy = game.add.sprite(400, 400, 'enemy');
-
+				
                 boss = game.add.sprite(7750, 80, 'boss');
+				game.physics.arcade.enable(boss);
                 boss.life = 30;
 
                 //création des groupes
@@ -285,15 +286,16 @@
             }
 
             function over(texte) {
-                texte.fill = "#00E6ff";
+                texte.fill = "#ffffff";
             }
 
             function out(texte) {
-                texte.fill = "#0ac6ff";
+                texte.fill = "#ffffff";
             }
 
             function down() {
                 createGame();
+				texte.fill = "#ff0000";
                 state = 1;
             }
 
