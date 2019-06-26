@@ -91,14 +91,16 @@
                         if (player.x < game.camera.x) player.x = game.camera.x;
                         if (player.x > game.camera.x + 800) player.x = game.camera.x + 800;
                         if (player.y < game.camera.y) player.y = 0;
-                        if (player.y > game.camera.y + 800) player.y = game.camera.y + 800;
+                        if (player.y > game.camera.y + 512) player.y = game.camera.y + 512;
 
                         game.physics.arcade.collide(player, bulletsEnemy, collisionPlayerBullet, null, this);
                         //game.physics.arcade.collide(player, layer, collisionLayerPlayer, null, this);
                         game.physics.arcade.collide(bulletPlayer, enemies, collisionBulletEnemies, null, this);
                         game.physics.arcade.collide(player, enemies, collisionEnemyPlayer, null, this);
                         game.physics.arcade.collide(bulletPlayer, boss, collisionBulletBoss, null, this);
-
+						
+						if(player.life == 0) state = 2;
+						
                         break;
 
                     case 2:
@@ -290,7 +292,7 @@
             }
 
             function out(texte) {
-                texte.fill = "#ffffff";
+                texte.fill = "#c1c1c1";
             }
 
             function down() {
